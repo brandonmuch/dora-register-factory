@@ -1,0 +1,91 @@
+version: 2
+
+models:
+  - name: stg_dora_entity
+    description: "DORA Register of Information - Template RT.01.01 (Entity)"
+    columns:
+      - name: entity_lei
+        description: "RT.01.01.0010 - LEI of the entity maintaining the register"
+        tests:
+          - not_null
+          - unique 
+
+      - name: entity_name
+        description: "RT.01.01.0020 - Name of the entity"
+        tests:
+          - not_null
+
+      - name: country_code
+        description: "RT.01.01.0030 - ISO 3166-1 alpha-2 country code"
+        tests:
+          - not_null
+
+      - name: entity_type_id
+        description: "RT.01.01.0040 - Type of entity (Closed list 1-23)"
+        tests:
+          - not_null
+          - accepted_values: 
+              values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+
+  - name: stg_dora_contract
+    description: "DORA Register of Information - Template RT.02.01 (Contracts)"
+    columns:
+      - name: contractual_arrangement_ref
+        description: "RT.02.01.0010 - Contract Reference"
+        tests:
+          - not_null
+          - unique
+      - name: contract_type_id
+        description: "RT.02.01.0020 - Type of contractual arrangement"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3] # 1=Standalone, 2=Overarching, 3=Subsequent
+
+  - name: stg_dora_entity_contract_link
+    description: "DORA Register of Information - Template RT.04.01 (Link Table)"
+    columns:
+      - name: entity_lei
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dora_entity')
+              field: entity_lei # MUST exist in the Entity table
+      - name: contractual_arrangement_ref
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dora_contract')
+              field: contractual_arrangement_ref # MUST exist in the Contract table
+  - name: stg_dora_provider
+    description: "DORA Register of Information - Template RT.05.01 (Providers)"
+    columns:
+      - name: provider_lei
+        description: "RT.05.01.0010 - Identification code of ICT TPP"
+        tests:
+          - not_null
+          - unique
+
+  - name: stg_dora_supply_chain
+    description: "DORA Register of Information - Template RT.05.02 (Supply Chains)"
+    columns:
+      - name: contractual_arrangement_ref
+        description: "RT.05.02.0010 - Contract Reference"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dora_contract')
+              field: contractual_arrangement_ref
+      - name: provider_lei
+        description: "RT.05.02.0030 - Provider LEI"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_dora_provider')
+              field: provider_lei
+      - name: provider_rank
+        description: "RT.05.02.0050 - Rank (1=Direct, 2+=Subcontractor)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4]
